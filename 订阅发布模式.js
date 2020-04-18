@@ -30,3 +30,4 @@ Dep.prototype.addSub = function (Sub) {
  //多放几个
  //然后执行发布
  dep.notify();//输出三个1
+ // 逻辑：监听数据的变化，调用updata方法更新视图

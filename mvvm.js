@@ -51,6 +51,9 @@ function compile(el,vm) {
                arr.forEach(key=>{
                    val = val[key];//等于不断地翻下一层
                })
+               new Watcher(vm,RegExp.$1,function(newVal){
+                   node.textContent = text.replace(/\{\{(.*)\}\}/,newVal);
+               })
                // 替换内容
                node.textContent = text.replace(/\{\{(.*)\}\}/,val);
            }
@@ -63,6 +66,7 @@ function compile(el,vm) {
     vm.$el.appendChild(fragment);
 }
 function Observe(data) {//写主要逻辑
+    let dep = new Dep();
     for(let key in data){//把data通过Object.defineProperty的方式定义属性
         let val = data[key];//不能直接用data[key],不然会无限调用get和set，导致报堆栈溢出的错
         observe(data[key])
@@ -70,14 +74,17 @@ function Observe(data) {//写主要逻辑
         Object.defineProperty(data,key,{
             enumerable:true,
             // configurable:true,
-            get() {
+            get() {//取值的时候
+                // a&& b :如果执行a后返回true，则执行b并返回b的值；如果执行a后返回false，则整个表达式返回a的值，b不执行
+                Dep.target && dep.addSub(Dep.target)//[watcher]
                 return val;
             },
-            set(newVal) {
+            set(newVal) {//更改值的时候
                 if(val === newVal)return;
                 val = newVal;
                 // 如果给予新的值，也应该有get 和 set
-                observe(val)
+                observe(val);
+                dep.notify();//然watcher的updata方法执行
             }
         })
     }
@@ -87,4 +94,41 @@ function Observe(data) {//写主要逻辑
 function observe(data) {
     if(typeof data !=='object')return
     return new Observe(data)
+}
+// 订阅发布  连接数据与视图
+function Dep() {//
+    this.Subs = [];
+}
+Dep.prototype.addSub = function (Sub) {
+    this.Subs.push(Sub)
+}
+
+Dep.prototype.notify = function () {
+    this.Subs.forEach(sub=>{//依次遍历数组中的更新函数达到更新的目的
+        sub.updata()
+    })
+}
+// Watcher是一个类，通过这个类创建的实例都拥有updata方法
+function Watcher(vm,exp,fn){//创建一个监听器，在Vue中给每个数据都提供一个监听器,Vue会做一系列预判，来尽量减少Watcher的执行
+    this.fn = fn;//挂载方便调用，下面同理
+    this.vm = vm;
+    this.exp = exp;
+    Dep.target = this;//将watcher装进去，方便取值触发get的时候使用addSub添加
+    // 给每个数据加监听，如果没有下面的，那么只有最后一个数据有监听功能
+    let arr = exp.split('.');
+    let val = vm;
+    arr.forEach(key=>{
+        val = val[key];//这步操作会取值，调用get方法，然后在get方法里，添加watcher监听器
+    })
+    // 添加完后，置空
+    Dep.target = null;
+}
+Watcher.prototype.updata = function () {//执行这个监听传入的东西
+    let val = this.vm;
+    let arr = this.exp.split('.');
+    arr.forEach(key=>{
+        val = val[key];//等于不断地翻下一层
+    })
+    //val取到最新的值
+    this.fn(val);
 }
