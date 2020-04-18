@@ -6,7 +6,7 @@ function GS(options = {}) {
     //拿到数据以后，开始观察data，每一个数据都劫持
     observe(data)
     // 把data的值挂到this上去,就可以直接通过this.xx调用数据了
-    //this代理了_data,即为  数据代理
+    //this代理了_data,即为  数据代理mm
     for(let key in data){
         Object.defineProperty(this,key,{
             enumerable:true,
