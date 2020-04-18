@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>数据劫持、数据代理</title>
+</head>
+<body>
+    <div id="app">
+        <div>{{a.a.a.a}}</div>
+        <div>{{b}}</div>
+<!--        <div>{{c.a}}</div>-->
+<!--        <div>{{c[0]}}</div>-->
+    </div>
+    <script src="./mvvm.js"></script>
+    <script>
+        let test = document.createElement('div',{});
+        test.id = 'test';
+        document.body.appendChild(test)
+        let gs = new GS({
+            el:'#app',
+            data:{
+                a:{a:{a:{a:1}}},
+                b:33,
+                c:[2,[11,1,[22,22]],{a:3}]
+            }
+        })
+    </script>
+</body>
+</html>
