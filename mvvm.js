@@ -20,8 +20,25 @@ function GS(options = {}) {
             }
         })
     }
+    initComputed.call(this);//通过call改变this指向，在initComputed中this直接指向实例,这个要放在编译之前
     // 传递dom元素过来，然后在传递当前的实例
     new compile(options.el,this)
+}
+// 初始化computed
+function initComputed(){
+    let vm = this;
+    let computed = this.$options.computed;
+    // 通过Object.key来遍历出属性的数组
+    Object.keys(computed).forEach(function(key){
+        //映射到对象上去
+        Object.defineProperty(vm,key,{
+            // computed不需要watcher
+            //如果是函数，那么直接可以用，如果是对象，那么就在调用它的get方法
+            get:typeof(computed[key]) === 'function'?computed[key]:computed[key].get,
+            set() {
+            }
+        })
+    })
 }
 // 编译
 function compile(el,vm) {
