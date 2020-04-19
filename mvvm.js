@@ -42,7 +42,7 @@ function compile(el,vm) {
 
            let text = node.textContent;//节点的内容
            let reg = /\{\{(.*)\}\}/;//匹配的正则
-           if(node.nodeType == 3 && reg.test(text)){//代表元素或属性中的文本内容,且匹配到双花括号
+           if(node.nodeType === 3 && reg.test(text)){//node.nodeType == 3 代表元素或属性中的文本内容,且匹配到双花括号
                let arr = RegExp.$1.split('.');//匹配到第一个花括号中的值，以点进行分割为数组
                // RegExp 是javascript中的一个内置对象。为正则表达式。
                // RegExp.$1是RegExp的一个属性,指的是与正则表达式匹配的第一个 子匹配(以括号为标志)字符串，
@@ -56,6 +56,57 @@ function compile(el,vm) {
                })
                // 替换内容
                node.textContent = text.replace(/\{\{(.*)\}\}/,val);
+           }
+           if(node.nodeType === 1){//node.nodeType == 1代表是元素
+                let nodeAttrs = node.attributes;//获取当前元素的所有属性，为一个对象，有索引
+               // 可用Array.form来将它转换成数组
+               Array.from(nodeAttrs).forEach(Attrs=>{
+                   let name = Attrs.name;//取出属性名
+                   let exp = Attrs.value;//值就是v-model后面绑定的数据的名字
+                   if(name.indexOf('v-') == 0){//如果第一个为v-说明是vue指令
+                        // 这里只有model就不再做判断了
+                       let val = vm[exp];
+                       if(exp.indexOf('.') != -1){
+                           val = vm;
+                           // val = vm[exp.split('.')[0]]
+                           exp.split('.').forEach(function(item,index){
+                               // if(index == exp.split('.').length - 1)return
+                               val = val[item];
+                           })
+                       }
+                       node.value = val;//将数据的值给到元素
+                       // val = vm[exp];
+                   }
+                   // 到这已经把值赋进去了，然后还需要订阅发布
+                   new Watcher(vm,exp,function(newValue){
+                       node.value = newValue;//当watcher触发视，会自动将最新的值给到元素
+                   })
+                   //当输入框的值变动是，也要把值给更新了
+                   node.addEventListener('input',function(e){
+                       let newValue = e.target.value;//取出元素中的值
+                       if(exp.indexOf('.') != -1){
+                           function EdiObjValue(obj, target, editName) {
+                               for (var prop in obj) {
+                                   if (obj.hasOwnProperty(prop)) {
+                                       if (obj[prop] == target) {
+                                           obj[prop] = editName;
+                                       }
+                                       if (Object.prototype.toString.call(obj[prop]) == '[object Object]') {
+                                           EdiObjValue(obj[prop], target, editName)
+                                       }
+                                   }
+                               }
+                           }
+                           let oldValue = vm;
+                           exp.split('.').forEach(function(item,index){
+                               oldValue = oldValue[item]
+                           })
+                           EdiObjValue(vm,oldValue,newValue)
+                       }else{
+                           vm[exp] = newValue;//实例中的值给更新成元素中的值，同时触发set方法，set方法触发notify更新元素的值
+                       }
+                   })
+               })
            }
            if(node.childNodes){//如果还有层级，再走一遍，递归
                replace(node);

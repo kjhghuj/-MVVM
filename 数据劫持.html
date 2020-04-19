@@ -8,6 +8,9 @@
     <div id="app">
         <div>a的值是：{{a.a.a.a}}</div>
         <div>b的值是：{{b}}</div>
+<!--        双向数据绑定-->
+        <input type="text" v-model="b">
+        <input type="text" v-model="a.a.a.a">
 <!--        <div>{{c.a}}</div>-->
 <!--        <div>{{c[0]}}</div>-->
     </div>
