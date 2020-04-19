@@ -8,9 +8,12 @@
     <div id="app">
         <div>a的值是：{{a.a.a.a}}</div>
         <div>b的值是：{{b}}</div>
+        <div>b的值是：{{d}}</div>
 <!--        双向数据绑定-->
-        <input type="text" v-model="b">
-        <input type="text" v-model="a.a.a.a">
+        <input type="text" v-model="b"><br>
+        <input type="text" v-model="a.a.a.a"><br>
+        <input type="text" v-model="d"><br>
+        <input type="text" v-model="hello"><br>
 <!--        <div>{{c.a}}</div>-->
 <!--        <div>{{c[0]}}</div>-->
     </div>
@@ -25,6 +28,13 @@
                 a:{a:{a:{a:1}}},
                 b:33,
                 // c:[2,[11,1,[22,22]],{a:3}]
+                d:'测试测试'
+            },
+            // computed可以缓存，只是把数据挂在了vm上
+            computed:{
+                hello(){
+                    return this.b + this.d;
+                }
             }
         })
     </script>
